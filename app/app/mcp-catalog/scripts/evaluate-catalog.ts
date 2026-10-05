@@ -871,6 +871,7 @@ If no run command found, respond with: {"mcpServers": {}}`;
         ...server,
         archestra_config: {
           ...server.archestra_config,
+          oauth: server.archestra_config?.oauth ?? null,
           client_config_permutations: result,
         },
         evaluation_model: model,
@@ -1261,6 +1262,7 @@ If no configuration found, respond: {"oauth": { "provider": null, "required": fa
         ...server,
         archestra_config: {
           ...server.archestra_config,
+          client_config_permutations: server.archestra_config?.client_config_permutations ?? null,
           oauth: result.oauth,
         },
         evaluation_model: model,

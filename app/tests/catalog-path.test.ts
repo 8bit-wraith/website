@@ -5,6 +5,7 @@ import { beforeEach, expect, it, vi } from 'vitest';
 
 import { GET } from '@mcpCatalog/api/server/[name]/route';
 import { clearServersCache, loadServers } from '@mcpCatalog/lib/catalog';
+import { ArchestraConfigSchema, ArchestraMcpServerManifestSchema } from '@mcpCatalog/schemas';
 
 vi.mock('fs', () => ({
   default: { existsSync: vi.fn(() => false), readFileSync: vi.fn(() => '["https://github.com/owner/repo"]') },
@@ -54,4 +55,20 @@ it('returns HTTP 200 for a valid placeholder without inventing configuration', a
   expect(body.name).toBe('owner__repo');
   expect(body.archestra_config).toBeNull();
   expect(body.user_config).toBeNull();
+});
+
+it('represents unevaluated configuration as null in the catalog schema', () => {
+  const fields = ArchestraMcpServerManifestSchema.pick({ archestra_config: true, user_config: true });
+  expect(fields.parse({ archestra_config: null, user_config: null })).toEqual({
+    archestra_config: null,
+    user_config: null,
+  });
+  expect(fields.safeParse({ archestra_config: 'unknown', user_config: null }).success).toBe(false);
+  expect(fields.safeParse({ archestra_config: null, user_config: 'unknown' }).success).toBe(false);
+});
+
+it('preserves unknown OAuth separately from evaluated no-OAuth configuration', () => {
+  expect(ArchestraConfigSchema.parse({ client_config_permutations: null, oauth: null }).oauth).toBeNull();
+  const known = { provider: null, required: false };
+  expect(ArchestraConfigSchema.parse({ client_config_permutations: null, oauth: known }).oauth).toEqual(known);
 });
