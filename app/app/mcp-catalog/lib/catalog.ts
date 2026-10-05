@@ -76,6 +76,11 @@ export function extractServerInfo(githubUrl: string): {
 // If name is provided, returns only that specific server in an array
 // If no name is provided, returns all servers
 export function loadServers(name?: string): ArchestraMcpServerManifest[] {
+  // Catalog names are single file basenames, never paths.
+  if (name && /[/\\\0]/.test(name)) {
+    return [];
+  }
+
   // Clear cache in development mode to ensure fresh data
   if (constants.debug) {
     serversCache.clear();
