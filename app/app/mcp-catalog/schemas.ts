@@ -70,7 +70,7 @@ export const ArchestraOauthSchema = z.object({
 
 export const ArchestraConfigSchema = z.object({
   client_config_permutations: ArchestraClientConfigPermutationsSchema.nullable(),
-  oauth: ArchestraOauthSchema,
+  oauth: ArchestraOauthSchema.nullable(),
 });
 
 export const ArchestraScoreBreakdownSchema = z.object({
@@ -137,7 +137,10 @@ export const ArchestraMcpServerManifestSchema = DxtManifestSchema.omit({ reposit
     readme: z.string().nullable(),
     category: McpServerCategorySchema.nullable(),
     quality_score: z.number().min(0).max(100).nullable(),
-    archestra_config: ArchestraConfigSchema,
+    // Pending catalog entries have not had configuration evaluated yet.
+    server: DxtManifestSchema.shape.server.nullable(),
+    archestra_config: ArchestraConfigSchema.nullable(),
+    user_config: DxtManifestSchema.shape.user_config.nullable(),
     github_info: ArchestraMcpServerFullGitHubInfoSchema,
     programming_language: z.string(),
     framework: z.string().nullable(),

@@ -78,6 +78,7 @@
           },
           "server": {
             "type": "object",
+            "nullable": true,
             "properties": {
               "type": {
                 "type": "string",
@@ -221,6 +222,7 @@
           },
           "user_config": {
             "type": "object",
+            "nullable": true,
             "additionalProperties": {
               "type": "object",
               "properties": {
@@ -327,6 +329,7 @@
           },
           "archestra_config": {
             "type": "object",
+            "nullable": true,
             "properties": {
               "client_config_permutations": {
                 "type": "object",
@@ -362,6 +365,7 @@
               },
               "oauth": {
                 "type": "object",
+                "nullable": true,
                 "properties": {
                   "provider": {
                     "type": "string",
