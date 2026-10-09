@@ -1181,23 +1181,18 @@ REMEMBER: The "server" object MUST ALWAYS include "type", "entry_point", and "mc
 
   try {
     const result = await callLLM(prompt, configFormat, model);
-    if (result && result.server) {
-      // Validate that server has required fields
-      if (!result.server.type || !result.server.entry_point || !result.server.mcp_config) {
-        console.warn(
-          `Server config missing required fields: type=${result.server.type}, entry_point=${result.server.entry_point}, mcp_config=${!!result.server.mcp_config}`
-        );
-        // If critical fields are missing, log the issue but still use what we got
-        // The improved prompt should prevent this from happening
-      }
-
-      return {
-        ...server,
-        server: result.server,
-        user_config: result.user_config || {},
-        evaluation_model: model,
-      };
+    const validated = CanonicalServerAndUserConfigSchema.safeParse(result);
+    if (!validated.success) {
+      console.warn('Invalid canonical server or user configuration; preserving existing configuration');
+      return server;
     }
+
+    return {
+      ...server,
+      server: validated.data.server,
+      user_config: validated.data.user_config,
+      evaluation_model: model,
+    };
   } catch (error: any) {
     console.warn(`Server config analysis failed: ${error.message}`);
   }
