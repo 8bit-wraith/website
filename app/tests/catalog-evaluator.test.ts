@@ -39,6 +39,18 @@ const valid = {
   user_config: {},
 };
 
+const protocolFeatures = {
+  implementing_tools: true,
+  implementing_prompts: false,
+  implementing_resources: false,
+  implementing_sampling: false,
+  implementing_roots: false,
+  implementing_logging: false,
+  implementing_stdio: true,
+  implementing_streamable_http: false,
+  implementing_oauth2: false,
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(previous));
@@ -54,6 +66,61 @@ afterEach(() => {
 });
 
 for (const model of ['offline-fixture', 'gemini-offline-fixture']) {
+  describe(`protocol features through ${model}`, () => {
+    const stored = { ...previous, protocol_features: protocolFeatures };
+
+    async function evaluate(response: unknown, fenced = false) {
+      vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(stored));
+      const responseText = fenced ? `\`\`\`json\n${JSON.stringify(response)}\n\`\`\`` : JSON.stringify(response);
+      const fetchMock = vi.fn(async () => ({
+        ok: true,
+        json: async () =>
+          model.startsWith('gemini-')
+            ? { candidates: [{ content: { parts: [{ text: responseText }] } }] }
+            : { response: responseText },
+      }));
+      vi.stubGlobal('fetch', fetchMock);
+
+      const result = await evaluateSingleRepo('https://github.com/fixture-owner/fixture-repo', {
+        force: true,
+        updateProtocol: true,
+        model,
+      });
+
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fs.writeFileSync).toHaveBeenCalledTimes(1);
+      expect(fs.writeFileSync).toHaveBeenCalledWith(
+        path.join(MCP_SERVERS_EVALUATIONS_DIR, 'fixture-owner__fixture-repo.json'),
+        JSON.stringify(result, null, 2)
+      );
+      return result;
+    }
+
+    it.each([
+      ['missing feature flags', { implementing_tools: true }],
+      ['string flag', { ...protocolFeatures, implementing_streamable_http: 'false' }],
+      ['numeric flag', { ...protocolFeatures, implementing_logging: 1 }],
+      ['unknown flag', { ...protocolFeatures, implementing_logging: null }],
+      ['null response', null],
+      ['array response', [protocolFeatures]],
+    ])('preserves stored features and model for %s', async (_label, response) => {
+      expect(await evaluate(response)).toEqual(stored);
+    });
+
+    it('saves a valid feature set while preserving unrelated metadata', async () => {
+      const updated = { ...protocolFeatures, implementing_logging: true };
+      expect(await evaluate(updated)).toEqual({ ...stored, protocol_features: updated, evaluation_model: model });
+    });
+
+    it('retains support for a valid object wrapped in Markdown', async () => {
+      expect(await evaluate(protocolFeatures, true)).toEqual({ ...stored, evaluation_model: model });
+    });
+
+    it('does not unwrap an array inside a Markdown fence', async () => {
+      expect(await evaluate([protocolFeatures], true)).toEqual(stored);
+    });
+  });
+
   describe(`canonical configuration through ${model}`, () => {
     async function evaluate(response: unknown) {
       const fetchMock = vi.fn(async () => ({
