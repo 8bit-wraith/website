@@ -138,6 +138,7 @@ export const ArchestraMcpServerManifestSchema = DxtManifestSchema.omit({ reposit
     category: McpServerCategorySchema.nullable(),
     quality_score: z.number().min(0).max(100).nullable(),
     // Pending catalog entries have not had configuration evaluated yet.
+    server: DxtManifestSchema.shape.server.nullable(),
     archestra_config: ArchestraConfigSchema.nullable(),
     user_config: DxtManifestSchema.shape.user_config.nullable(),
     github_info: ArchestraMcpServerFullGitHubInfoSchema,

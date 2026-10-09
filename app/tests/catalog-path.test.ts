@@ -72,3 +72,13 @@ it('preserves unknown OAuth separately from evaluated no-OAuth configuration', (
   const known = { provider: null, required: false };
   expect(ArchestraConfigSchema.parse({ client_config_permutations: null, oauth: known }).oauth).toEqual(known);
 });
+
+it('keeps pending canonical server configuration explicit without accepting malformed objects', () => {
+  const field = ArchestraMcpServerManifestSchema.pick({ server: true });
+  expect(field.parse({ server: null })).toEqual({ server: null });
+  const known = { type: 'node', entry_point: 'fixture.js', mcp_config: { command: 'node', args: ['fixture.js'] } };
+  expect(field.parse({ server: known })).toEqual({ server: known });
+  for (const server of [undefined, 'unknown', {}, { mcp_config: known.mcp_config }, { ...known, type: 'unknown' }]) {
+    expect(field.safeParse({ server }).success).toBe(false);
+  }
+});

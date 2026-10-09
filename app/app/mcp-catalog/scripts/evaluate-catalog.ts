@@ -634,10 +634,7 @@ function createNewMCPServer(
   githubInfo: ArchestraMcpServerGitHubRepoInfo,
   apiData: GitHubApiResponse
 ): ArchestraMcpServerManifest {
-  /**
-   * NOTE: here we are casting the type to ArchestraMcpServerManifest, because the type is not fully defined yet
-   * some of the data will be filled in throughout the various steps of the evaluation process in this script
-   */
+  // Pending configuration is explicit in the catalog type and filled by later evaluation steps.
   return {
     dxt_version: '1.0.0',
     version: '1.0.0',
@@ -679,7 +676,7 @@ function createNewMCPServer(
     evaluation_model: null,
     raw_dependencies: apiData.raw_dependencies || null,
     last_scraped_at: new Date().toISOString(),
-  } as unknown as ArchestraMcpServerManifest;
+  };
 }
 
 /**
